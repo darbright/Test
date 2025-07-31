@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ค้นหาข้อมูลด้วยอีเมล</title>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2em auto;
+      padding: 1em;
+    }
+    input {
+      padding: 8px;
+      width: 70%;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+      margin-left: 8px;
+    }
+    .result-box {
+      margin-top: 20px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    .status-danger {
+      color: red;
+      font-weight: bold;
+    }
+    .status-warning {
+      color: orange;
+      font-weight: bold;
+    }
+    .status-good {
+      color: green;
+      font-weight: bold;
+    }
+
+    @media screen and (max-width: 600px) {
+      input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      button {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+   <h2>ค้นหาข้อมูลด้วยอีเมล</h2>
+  <input type="text" id="emailInput" placeholder="กรอกอีเมล">
+  <button onclick="searchData()">ค้นหา</button>
+
+  <!-- ✅ แทรกรูปภาพตรงนี้ -->
+  <div style="margin-top: 20px;">
+    <img src="https://via.placeholder.com/600x300?text=ภาพตัวอย่าง" 
+         alt="ภาพตัวอย่าง" 
+         style="max-width: 100%; height: auto; border-radius: 10px;">
+  </div>
+
+  <!-- ✅ หรือจะแทรกคลิปวิดีโอ -->
+  <div style="margin-top: 20px;">
+    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+      <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              frameborder="0" allowfullscreen
+              style="position: absolute; top:0; left:0; width:100%; height:100%;">
+      </iframe>
+    </div>
+  </div>
+
+  <!-- ✅ ส่วนผลลัพธ์ -->
+  <div id="result" class="result-box"></div>
+
+  <script>
+    async function searchData() {
+      const email = document.getElementById("emailInput").value.trim().toLowerCase();
+      const resultDiv = document.getElementById("result");
+
+      if (!email) {
+        resultDiv.textContent = "โปรดใส่อีเมลในช่องนี้";
+        return;
+      }
+
+      resultDiv.textContent = "กำลังค้นหา...";
+
+      const apiUrl = "https://script.google.com/macros/s/AKfycbzPhMyVymJ8bOf3fzLw302IT4RF9sdNaS9P6-lLRbOFn7DO_uuffIaGbS1WPy8_CWq8/exec?email=" + encodeURIComponent(email);
+
+      try {
+        const response = await fetch(apiUrl);
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          const text = await response.text();
+          resultDiv.textContent = text;
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.results && data.results.length > 0) {
+          resultDiv.innerHTML = data.results.map(row => {
+            const statusText = row["status"] || "-";
+            const statusClass = getStatusClass(statusText);
+
+            return `
+              <div style="margin-bottom: 1em;">
+                <strong>อีเมล:</strong> ${row["email"] || "-"}<br>
+                <strong>วันที่เข้า:</strong> ${formatDate(row["entry date"]) || "-"}<br>
+                <strong>วันหมดอายุ:</strong> ${formatDate(row["expiry date"]) || "-"}<br>
+                <strong>สถานะ:</strong> <span class="${statusClass}">${statusText}</span>
+              </div>
+            `;
+          }).join("<hr>");
+        } else {
+          resultDiv.textContent = "ไม่พบข้อมูล";
+        }
+      } catch (error) {
+        console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
+        resultDiv.textContent = "เกิดข้อผิดพลาดในการดึงข้อมูล";
+      }
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "-";
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      return d.getDate().toString().padStart(2,"0") + "/" +
+             (d.getMonth()+1).toString().padStart(2,"0") + "/" +
+             d.getFullYear();
+    }
+
+    function getStatusClass(status) {
+      if (status === "หมดอายุ") return "status-danger";
+      if (/ใกล้หมดอายุ/.test(status)) return "status-warning";
+      if (/เหลืออีก (8|9|[1-9][0-9]) วัน(?! \(ใกล้หมดอายุ\))/.test(status)) return "status-good";
+      return "";
+    }
+  </script>
+</body>
+</html>
