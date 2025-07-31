@@ -90,7 +90,7 @@
 
       resultDiv.textContent = "กำลังค้นหา...";
 
-      const apiUrl = "https://script.google.com/macros/s/AKfycbzPhMyVymJ8bOf3fzLw302IT4RF9sdNaS9P6-lLRbOFn7DO_uuffIaGbS1WPy8_CWq8/exec?email=" + encodeURIComponent(email);
+      const apiUrl = " " + encodeURIComponent(email);
 
       try {
         const response = await fetch(apiUrl);
